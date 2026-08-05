@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>VendorProducts_Analysis.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #cf8e6d;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.ls0 { height: 1px; border-width: 0; color: #43454a; background-color:#43454a}
+</style>
+</head>
+<body bgcolor="#191a1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+VendorProducts_Analysis.ipynb</font>
+</center></td></tr></table>
+<pre><span class="s0">#%% md 
+# Vendor Products Data Analysis 
+ 
+This notebook loads product data from two sheets (Items and Collections), cleans the data, enriches the Collections sheet with missing columns from Items, and stacks both into one unified output file. <hr class="ls0">#%% md 
+## Setup 
+ 
+Import pandas — the only library needed. <hr class="ls0">#%% 
+</span><span class="s1">import </span><span class="s0">pandas </span><span class="s1">as </span><span class="s0">pd</span><hr class="ls0"><span class="s0">#%% md 
+## Load Data 
+ 
+Read both sheets from the Excel file. <hr class="ls0">#%% 
+items </span><span class="s2">= </span><span class="s0">pd</span><span class="s2">.</span><span class="s0">read_excel</span><span class="s2">(</span><span class="s3">'VendorProducts.xlsx'</span><span class="s2">, </span><span class="s0">sheet_name</span><span class="s2">=</span><span class="s3">'Items'</span><span class="s2">)</span>
+<span class="s0">cols </span><span class="s2">= </span><span class="s0">pd</span><span class="s2">.</span><span class="s0">read_excel</span><span class="s2">(</span><span class="s3">'VendorProducts.xlsx'</span><span class="s2">, </span><span class="s0">sheet_name</span><span class="s2">=</span><span class="s3">'Collections'</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+## Step 1: Clean Prices 
+ 
+Prices are stored as text with a currency suffix (`د.ع`) and thousand-separator commas. Remove both and convert to a clean integer. <hr class="ls0">#%% 
+items</span><span class="s2">[</span><span class="s3">'Price'</span><span class="s2">] = </span><span class="s0">items</span><span class="s2">[</span><span class="s3">'Price'</span><span class="s2">].</span><span class="s0">str</span><span class="s2">.</span><span class="s0">replace</span><span class="s2">(</span><span class="s3">'د.ع'</span><span class="s2">, </span><span class="s3">''</span><span class="s2">).</span><span class="s0">str</span><span class="s2">.</span><span class="s0">replace</span><span class="s2">(</span><span class="s3">','</span><span class="s2">, </span><span class="s3">''</span><span class="s2">).</span><span class="s0">astype</span><span class="s2">(</span><span class="s0">int</span><span class="s2">)</span>
+<span class="s0">cols</span><span class="s2">[</span><span class="s3">'Price'</span><span class="s2">] = </span><span class="s0">cols</span><span class="s2">[</span><span class="s3">'Price'</span><span class="s2">].</span><span class="s0">str</span><span class="s2">.</span><span class="s0">replace</span><span class="s2">(</span><span class="s3">'د.ع'</span><span class="s2">, </span><span class="s3">''</span><span class="s2">).</span><span class="s0">str</span><span class="s2">.</span><span class="s0">replace</span><span class="s2">(</span><span class="s3">','</span><span class="s2">, </span><span class="s3">''</span><span class="s2">).</span><span class="s0">astype</span><span class="s2">(</span><span class="s0">int</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+## Step 2: Transform Collections Sheet 
+ 
+### 2a. Merge Name + Color 
+ 
+Append the Color (Arabic) to Item Name and Secondary Color (English) to Secondary Item Name. This gives each variant a unique product name that includes its color/size. 
+ 
+`fillna('')` handles products that have no color value. `str.strip()` removes extra spaces. <hr class="ls0">#%% 
+cols</span><span class="s2">[</span><span class="s3">'Item Name'</span><span class="s2">] = </span><span class="s0">cols</span><span class="s2">[</span><span class="s3">'Item Name'</span><span class="s2">] + </span><span class="s3">' ' </span><span class="s2">+ </span><span class="s0">cols</span><span class="s2">[</span><span class="s3">'Color'</span><span class="s2">].</span><span class="s0">fillna</span><span class="s2">(</span><span class="s3">''</span><span class="s2">)</span>
+<span class="s0">cols</span><span class="s2">[</span><span class="s3">'Secondary Item Name'</span><span class="s2">] = </span><span class="s0">cols</span><span class="s2">[</span><span class="s3">'Secondary Item Name'</span><span class="s2">] + </span><span class="s3">' ' </span><span class="s2">+ </span><span class="s0">cols</span><span class="s2">[</span><span class="s3">'Secondary Color'</span><span class="s2">].</span><span class="s0">fillna</span><span class="s2">(</span><span class="s3">''</span><span class="s2">)</span>
+<span class="s0">cols</span><span class="s2">[</span><span class="s3">'Item Name'</span><span class="s2">] = </span><span class="s0">cols</span><span class="s2">[</span><span class="s3">'Item Name'</span><span class="s2">].</span><span class="s0">str</span><span class="s2">.</span><span class="s0">strip</span><span class="s2">()</span>
+<span class="s0">cols</span><span class="s2">[</span><span class="s3">'Secondary Item Name'</span><span class="s2">] = </span><span class="s0">cols</span><span class="s2">[</span><span class="s3">'Secondary Item Name'</span><span class="s2">].</span><span class="s0">str</span><span class="s2">.</span><span class="s0">strip</span><span class="s2">()</span><hr class="ls0"><span class="s0">#%% md 
+### 2b. Drop Unwanted Columns 
+ 
+Drop columns that are not in the final output: Color, Secondary Color, Size, Code, and Color Code. <hr class="ls0">#%% 
+cols</span><span class="s2">.</span><span class="s0">drop</span><span class="s2">(</span><span class="s0">columns</span><span class="s2">=[</span><span class="s3">'Color'</span><span class="s2">, </span><span class="s3">'Secondary Color'</span><span class="s2">, </span><span class="s3">'Size'</span><span class="s2">, </span><span class="s3">'Code'</span><span class="s2">, </span><span class="s3">'Color Code'</span><span class="s2">], </span><span class="s0">inplace</span><span class="s2">=</span><span class="s1">True</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+### 2c. Rename Columns to Match Items Sheet 
+ 
+Rename so column names are identical between both sheets (needed for concat later). <hr class="ls0">#%% 
+cols</span><span class="s2">.</span><span class="s0">rename</span><span class="s2">(</span><span class="s0">columns</span><span class="s2">={</span>
+    <span class="s3">'Item Id'</span><span class="s2">: </span><span class="s3">'Id'</span><span class="s2">,</span>
+    <span class="s3">'Item Name'</span><span class="s2">: </span><span class="s3">'Name'</span><span class="s2">,</span>
+    <span class="s3">'Secondary Item Name'</span><span class="s2">: </span><span class="s3">'Secondary Name'</span>
+<span class="s2">}, </span><span class="s0">inplace</span><span class="s2">=</span><span class="s1">True</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+After renaming, Collections has these columns: 
+- `Id`, `Name`, `Secondary Name`, `Price`, `Barcode`, `Unit Level`, `Is Active`, `Picture` <hr class="ls0">#%% md 
+## Step 3: Clean Items Sheet 
+ 
+Drop columns we don't need: Code, Sub Description, and Secondary Sub Description. Price was already cleaned in Step 1. <hr class="ls0">#%% 
+items</span><span class="s2">.</span><span class="s0">drop</span><span class="s2">(</span><span class="s0">columns</span><span class="s2">=[</span><span class="s3">'Code'</span><span class="s2">, </span><span class="s3">'Sub Description'</span><span class="s2">, </span><span class="s3">'Secondary Sub Description'</span><span class="s2">], </span><span class="s0">inplace</span><span class="s2">=</span><span class="s1">True</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+After dropping, Items has these 12 columns: 
+- `Picture`, `Id`, `Name`, `Secondary Name`, `Barcode`, `Price`, `Description`, `Secondary Description`, `Menu`, `Brand`, `Secondary Brand`, `Has Collections` <hr class="ls0">#%% md 
+## Step 4: Fill Missing Columns in Collections 
+ 
+Collections is missing these columns from Items: 
+- `Description`, `Secondary Description`, `Menu`, `Brand`, `Secondary Brand`, `Has Collections` 
+ 
+We map them from the Items sheet by matching on `Id` (every product in Collections also exists in Items). <hr class="ls0">#%% 
+lookup </span><span class="s2">= </span><span class="s0">items</span><span class="s2">[[</span><span class="s3">'Id'</span><span class="s2">, </span><span class="s3">'Description'</span><span class="s2">, </span><span class="s3">'Secondary Description'</span><span class="s2">, </span><span class="s3">'Menu'</span><span class="s2">, </span><span class="s3">'Brand'</span><span class="s2">, </span><span class="s3">'Secondary Brand'</span><span class="s2">, </span><span class="s3">'Has Collections'</span><span class="s2">]]</span>
+<span class="s0">cols </span><span class="s2">= </span><span class="s0">pd</span><span class="s2">.</span><span class="s0">merge</span><span class="s2">(</span><span class="s0">cols</span><span class="s2">, </span><span class="s0">lookup</span><span class="s2">, </span><span class="s0">on</span><span class="s2">=</span><span class="s3">'Id'</span><span class="s2">, </span><span class="s0">how</span><span class="s2">=</span><span class="s3">'left'</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+## Step 5: Drop Collection-Only Columns 
+ 
+Drop `Unit Level` and `Is Active` — these only exist in Collections and are not in the final Items column structure. Both sheets need the same columns for stacking. <hr class="ls0">#%% 
+cols</span><span class="s2">.</span><span class="s0">drop</span><span class="s2">(</span><span class="s0">columns</span><span class="s2">=[</span><span class="s3">'Unit Level'</span><span class="s2">, </span><span class="s3">'Is Active'</span><span class="s2">], </span><span class="s0">inplace</span><span class="s2">=</span><span class="s1">True</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+Now both sheets have the same 12 columns. 
+ 
+**Items:** `Picture`, `Id`, `Name`, `Secondary Name`, `Barcode`, `Price`, `Description`, `Secondary Description`, `Menu`, `Brand`, `Secondary Brand`, `Has Collections` 
+ 
+**Collections:** `Id`, `Name`, `Secondary Name`, `Price`, `Barcode`, `Picture`, `Description`, `Secondary Description`, `Menu`, `Brand`, `Secondary Brand`, `Has Collections` <hr class="ls0">#%% md 
+## Step 6: Stack Both Sheets 
+ 
+Concatenate Items (24,702 rows) and Collections (14,486 rows) into one unified dataframe. `ignore_index=True` resets the row numbers. <hr class="ls0">#%% 
+final </span><span class="s2">= </span><span class="s0">pd</span><span class="s2">.</span><span class="s0">concat</span><span class="s2">([</span><span class="s0">items</span><span class="s2">, </span><span class="s0">cols</span><span class="s2">], </span><span class="s0">ignore_index</span><span class="s2">=</span><span class="s1">True</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+## Step 7: Reorder Columns 
+ 
+Arrange columns to match the original Items sheet order. <hr class="ls0">#%% 
+final </span><span class="s2">= </span><span class="s0">final</span><span class="s2">[[</span><span class="s3">'Picture'</span><span class="s2">, </span><span class="s3">'Id'</span><span class="s2">, </span><span class="s3">'Name'</span><span class="s2">, </span><span class="s3">'Secondary Name'</span><span class="s2">, </span><span class="s3">'Barcode'</span><span class="s2">, </span><span class="s3">'Price'</span><span class="s2">,</span>
+               <span class="s3">'Description'</span><span class="s2">, </span><span class="s3">'Secondary Description'</span><span class="s2">, </span><span class="s3">'Menu'</span><span class="s2">, </span><span class="s3">'Brand'</span><span class="s2">,</span>
+               <span class="s3">'Secondary Brand'</span><span class="s2">, </span><span class="s3">'Has Collections'</span><span class="s2">]]</span><hr class="ls0"><span class="s0">#%% md 
+## Step 8: Verify and Export 
+ 
+Check the final shape and a preview before saving. <hr class="ls0">#%% 
+print</span><span class="s2">(</span><span class="s3">'Final shape:'</span><span class="s2">, </span><span class="s0">final</span><span class="s2">.</span><span class="s0">shape</span><span class="s2">)</span>
+<span class="s0">final</span><span class="s2">.</span><span class="s0">tail</span><span class="s2">(</span><span class="s4">10</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% 
+final</span><span class="s2">.</span><span class="s0">to_excel</span><span class="s2">(</span><span class="s3">'AnalysedVendorProducts.xlsx'</span><span class="s2">, </span><span class="s0">index</span><span class="s2">=</span><span class="s1">False</span><span class="s2">)</span><hr class="ls0"><span class="s0">#%% md 
+Done. The output file `VendorProducts_Final.xlsx` has all Items rows followed by all Collections rows (stacked vertically) with matching 12-column structure.</span></pre>
+</body>
+</html>
